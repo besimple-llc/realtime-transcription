@@ -7,7 +7,8 @@ export function meta() {
 
 export function loader({ context }: Route.LoaderArgs) {
 
-  return { message: context.VALUE_FROM_EXPRESS, websocketURL: `http://localhost:${process.env.PORT || "3000"}` };
+  const websocketURL = process.env.RENDER_EXTERNAL_URL || `http://localhost:${process.env.PORT || "3000"}`;
+  return { message: context.VALUE_FROM_EXPRESS, websocketURL };
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
