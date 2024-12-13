@@ -1,5 +1,5 @@
 import type { Route } from "./+types/home";
-import { Welcome } from "../welcome/welcome";
+import {useWebSocket} from "~/hooks/useWebsocket";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -13,5 +13,6 @@ export function loader({ context }: Route.LoaderArgs) {
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
-  return <Welcome message={loaderData.message} />;
+  useWebSocket();
+  return <div>test</div>;
 }
