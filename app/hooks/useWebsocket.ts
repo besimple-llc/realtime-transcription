@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { type Socket, io } from "socket.io-client";
 
-export function useWebSocket() {
+export function useWebSocket(url: string) {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    const socketIo = io(`http://localhost:${process.env.PORT || "3000"}`);
+    const socketIo = io(url);
 
     socketIo.on("connect", () => {
       setIsConnected(true);
@@ -32,7 +32,7 @@ export function useWebSocket() {
     return () => {
       socketIo.disconnect();
     };
-  }, []);
+  }, [url]);
 
   return { socket, isConnected };
 }

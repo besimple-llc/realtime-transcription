@@ -6,10 +6,11 @@ export function meta() {
 }
 
 export function loader({ context }: Route.LoaderArgs) {
-  return { message: context.VALUE_FROM_EXPRESS };
+
+  return { message: context.VALUE_FROM_EXPRESS, websocketURL: `http://localhost:${process.env.PORT || "3000"}` };
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
-  useWebSocket();
+  useWebSocket(loaderData.websocketURL);
   return <div>test</div>;
 }
