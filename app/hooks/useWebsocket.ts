@@ -1,5 +1,5 @@
-import {useEffect, useState} from "react";
-import {io, Socket} from "socket.io-client";
+import { useEffect, useState } from "react";
+import { type Socket, io } from "socket.io-client";
 
 export function useWebSocket() {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -34,5 +34,5 @@ export function useWebSocket() {
     };
   }, []);
 
-  return {socket, isConnected};
+  return { socket, isConnected };
 }

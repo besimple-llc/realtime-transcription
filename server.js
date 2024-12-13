@@ -1,8 +1,8 @@
+import { createServer } from "node:http";
 import compression from "compression";
 import express from "express";
 import morgan from "morgan";
-import {createServer} from "node:http";
-import {Server} from "socket.io";
+import { Server } from "socket.io";
 
 // Short-circuit the type-checking of the built output.
 const BUILD_PATH = "./build/server/index.js";
@@ -20,8 +20,8 @@ if (DEVELOPMENT) {
   console.log("Starting development server");
   const viteDevServer = await import("vite").then((vite) =>
     vite.createServer({
-      server: {middlewareMode: true},
-    })
+      server: { middlewareMode: true },
+    }),
   );
   app.use(viteDevServer.middlewares);
   app.use(async (req, res, next) => {
@@ -37,11 +37,8 @@ if (DEVELOPMENT) {
   });
 } else {
   console.log("Starting production server");
-  app.use(
-    "/assets",
-    express.static("build/client/assets", {immutable: true, maxAge: "1y"})
-  );
-  app.use(express.static("build/client", {maxAge: "1h"}));
+  app.use("/assets", express.static("build/client/assets", { immutable: true, maxAge: "1y" }));
+  app.use(express.static("build/client", { maxAge: "1h" }));
   app.use(await import(BUILD_PATH).then((mod) => mod.app));
 }
 

@@ -6,7 +6,8 @@
     "build": "react-router build",
     "dev": "cross-env NODE_ENV=development node server.js",
     "start": "node server.js",
-    "typecheck": "react-router typegen && tsc"
+    "typecheck": "react-router typegen && tsc",
+    "check": "npx @biomejs/biome check --write ."
   },
   "dependencies": {
     "@react-router/express": "^7.0.2",
@@ -22,6 +23,7 @@
     "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.9.4",
     "@react-router/dev": "^7.0.2",
     "@types/compression": "^1.7.5",
     "@types/express": "^5.0.0",
