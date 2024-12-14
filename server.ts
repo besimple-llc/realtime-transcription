@@ -2,7 +2,7 @@ import {createServer} from "node:http";
 import compression from "compression";
 import express from "express";
 import morgan from "morgan";
-import {Server} from "socket.io";
+import {setUpWebSocketServer} from "./websocket-server";
 
 // Short-circuit the type-checking of the built output.
 const BUILD_PATH = "./build/server/index.js";
@@ -23,6 +23,7 @@ if (DEVELOPMENT) {
     }),
   );
   app.use(viteDevServer.middlewares);
+  // @ts-ignore
   app.use(async (req, res, next) => {
     try {
       const source = await viteDevServer.ssrLoadModule("./server/app.ts");
@@ -38,32 +39,13 @@ if (DEVELOPMENT) {
   console.log("Starting production server");
   app.use("/assets", express.static("build/client/assets", { immutable: true, maxAge: "1y" }));
   app.use(express.static("build/client", { maxAge: "1h" }));
+  // @ts-ignore
   app.use(await import(BUILD_PATH).then((mod) => mod.app));
 }
 
 app.use(morgan("tiny"));
 
-const io = new Server(httpServer);
-
-// WebSocket connection handler
-io.on("connection", (socket) => {
-  console.log("A client connected");
-
-  socket.on("join", (data) => {
-    console.log("Joining room:", data);
-    socket.join(data.roomId);
-  });
-
-  socket.on("room_message", (data) => {
-    console.log("Received message:", data);
-    // Broadcast the message to all connected clients
-    io.to(data.roomId).emit("message", data.message);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("A client disconnected");
-  });
-});
+setUpWebSocketServer(httpServer);
 
 httpServer.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

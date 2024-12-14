@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "build": "react-router build",
-    "dev": "cross-env NODE_ENV=development node server.js",
-    "start": "node server.js",
+    "dev": "cross-env NODE_ENV=development npx tsx server.js",
+    "start": "npx tsx server.js",
     "typegen:watch": "react-router typegen --watch",
     "typecheck": "react-router typegen && tsc",
     "check": "npx @biomejs/biome check --write ."
@@ -39,6 +39,7 @@
     "cross-env": "^7.0.3",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.16",
+    "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vite": "^5.4.11",
     "vite-tsconfig-paths": "^5.1.4"

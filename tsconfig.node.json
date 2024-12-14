@@ -1,13 +1,13 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["server.mjs", "tailwind.config.ts", "vite.config.ts"],
+  "include": ["server.ts", "tailwind.config.ts", "vite.config.ts", "websocket-server.ts"],
   "compilerOptions": {
     "composite": true,
     "strict": true,
-    "types": ["node"],
+    "types": ["ES2022"],
     "lib": ["ES2022"],
     "target": "ES2022",
     "module": "ES2022",
-    "moduleResolution": "bundler"
+    "moduleResolution": "node"
   }
 }
