@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "build": "react-router build",
-    "dev": "cross-env NODE_ENV=development npx tsx server.js",
-    "start": "npx tsx server.js",
+    "dev": "cross-env NODE_ENV=development npx tsx server.ts",
+    "start": "npx tsx server.ts",
     "typegen:watch": "react-router typegen --watch",
     "typecheck": "react-router typegen && tsc",
     "check": "npx @biomejs/biome check --write ."
