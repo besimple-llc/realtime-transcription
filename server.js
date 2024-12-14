@@ -1,8 +1,8 @@
-import { createServer } from "node:http";
+import {createServer} from "node:http";
 import compression from "compression";
 import express from "express";
 import morgan from "morgan";
-import { Server } from "socket.io";
+import {Server} from "socket.io";
 
 // Short-circuit the type-checking of the built output.
 const BUILD_PATH = "./build/server/index.js";
@@ -11,7 +11,6 @@ const PORT = Number.parseInt(process.env.PORT || "3000");
 
 const app = express();
 const httpServer = createServer(app);
-const io = new Server(httpServer);
 
 app.use(compression());
 app.disable("x-powered-by");
@@ -44,14 +43,21 @@ if (DEVELOPMENT) {
 
 app.use(morgan("tiny"));
 
+const io = new Server(httpServer);
+
 // WebSocket connection handler
 io.on("connection", (socket) => {
   console.log("A client connected");
 
-  socket.on("message", (data) => {
+  socket.on("join", (data) => {
+    console.log("Joining room:", data);
+    socket.join(data.roomId);
+  });
+
+  socket.on("room_message", (data) => {
     console.log("Received message:", data);
     // Broadcast the message to all connected clients
-    io.emit("message", data);
+    io.to(data.roomId).emit("message", data.message);
   });
 
   socket.on("disconnect", () => {
