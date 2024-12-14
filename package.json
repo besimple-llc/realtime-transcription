@@ -6,11 +6,13 @@
     "build": "react-router build",
     "dev": "cross-env NODE_ENV=development node server.js",
     "start": "node server.js",
+    "typegen:watch": "react-router typegen --watch",
     "typecheck": "react-router typegen && tsc",
     "check": "npx @biomejs/biome check --write ."
   },
   "dependencies": {
     "@react-router/express": "^7.0.2",
+    "@react-router/fs-routes": "^7.0.2",
     "@react-router/node": "^7.0.2",
     "compression": "^1.7.5",
     "express": "^4.21.1",
