@@ -24,7 +24,7 @@ export const AudioMessageSender = ({ socket, roomId }: Props) => {
       for (let i = 0; i < inputData.length; i++) {
         pcmData[i] = inputData[i] * 0x7FFF;
       }
-      socket.emit("transcription", roomId, pcmData.buffer);
+      socket.emit("add_audio_message", roomId, pcmData.buffer);
     };
 
     source.connect(processor);

@@ -7,8 +7,8 @@ export interface ServerToClientEvents {
 export interface ClientToServerEvents {
   join: (roomId: string) => void;
   leave: (roomId: string) => void;
-  room_message: (data: { roomId: string; message: Message }) => void;
-  transcription: (roomId: string, arrayBuffer: ArrayBuffer) => void;
+  add_text_message: (roomId: string, text: string) => void;
+  add_audio_message: (roomId: string, arrayBuffer: ArrayBuffer) => void;
 }
 
 export type Message = {

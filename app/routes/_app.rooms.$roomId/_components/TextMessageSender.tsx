@@ -14,14 +14,7 @@ export const TextMessageSender = ({ socket, roomId }: Props) => {
   const sendMessage: FormEventHandler = (e) => {
     e.preventDefault();
     if (inputMessage.trim() && socket) {
-      socket.emit("room_message", {
-        roomId: roomId,
-        message: {
-          messageJa: inputMessage,
-          messageEn: "",
-          datetime: new Date().toISOString(),
-        },
-      });
+      socket.emit("add_text_message", roomId, inputMessage);
       setInputMessage("");
     }
   };
