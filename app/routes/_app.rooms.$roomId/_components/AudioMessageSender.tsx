@@ -42,11 +42,11 @@ export const AudioMessageSender = ({ socket, roomId }: Props) => {
 
   if (isTranscribing) {
     return (
-      <button type="button" className="border p-2 rounded" onClick={stopTranscription}>音声文字起こしを止める</button>
+      <button type="button" className="border p-2 rounded" onClick={stopTranscription}>送信を停止する</button>
     )
   }
 
   return (
-    <button type="button" className="border p-2 rounded" onClick={startTranscription}>音声文字起こしをする</button>
+    <button type="button" className="border p-2 rounded" onClick={startTranscription}>音声でメッセージを送信</button>
   )
 }

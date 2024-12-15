@@ -6,7 +6,8 @@ import {
   type PushAudioInputStream,
   ResultReason,
   SpeechConfig,
-  SpeechRecognizer
+  SpeechTranslationConfig,
+  TranslationRecognizer
 } from "microsoft-cognitiveservices-speech-sdk";
 import {Server} from "socket.io";
 import type {ClientToServerEvents, Message, ServerToClientEvents} from "./types/Websocket";
@@ -19,7 +20,7 @@ interface Transcriber {
 }
 
 class MicrosoftTranscriber implements Transcriber {
-  private recognizer: SpeechRecognizer;
+  private recognizer: TranslationRecognizer;
   private pushStream: PushAudioInputStream;
   private transcribing = false;
   constructor(callbacks: {
@@ -28,19 +29,23 @@ class MicrosoftTranscriber implements Transcriber {
     if (!process.env.MICROSOFT_SPEECH_API_KEY || !process.env.MICROSOFT_SPEECH_API_REGION) {
       throw new Error("Please set MICROSOFT_SPEECH_API_KEY and MICROSOFT_SPEECH_API_REGION.");
     }
-    const speechConfig = SpeechConfig.fromSubscription(process.env.MICROSOFT_SPEECH_API_KEY, process.env.MICROSOFT_SPEECH_API_REGION);
+    const speechConfig = SpeechTranslationConfig.fromSubscription(process.env.MICROSOFT_SPEECH_API_KEY, process.env.MICROSOFT_SPEECH_API_REGION);
     speechConfig.speechRecognitionLanguage = "ja-JP";
+    speechConfig.addTargetLanguage("en");
 
     const pushStream = AudioInputStream.createPushStream();
     const audioConfig = AudioConfig.fromStreamInput(pushStream);
-    const recognizer = new SpeechRecognizer(speechConfig, audioConfig);
+    const recognizer = new TranslationRecognizer(speechConfig, audioConfig);
 
     recognizer.recognized = (s, e) => {
-      if (e.result.reason === ResultReason.RecognizedSpeech) {
-        console.log(`RECOGNIZED: Text=${e.result.text}`);
+      if (e.result.reason === ResultReason.TranslatedSpeech) {
+        console.log("RECOGNIZED: Text=", {
+          ja: e.result.text,
+          en: e.result.translations.get("en"),
+        });
         callbacks.onRecognized({
           messageJa: e.result.text,
-          messageEn: "",
+          messageEn: e.result.translations.get("en"),
           datetime: new Date().toISOString(),
         })
       } else if (e.result.reason === ResultReason.NoMatch) {

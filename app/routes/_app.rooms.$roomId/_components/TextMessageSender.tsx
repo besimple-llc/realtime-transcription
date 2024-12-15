@@ -26,7 +26,7 @@ export const TextMessageSender = ({ socket, roomId }: Props) => {
         className="border p-2 rounded"
         value={inputMessage}
         onChange={(e) => setInputMessage(e.target.value)}
-        placeholder="メッセージを送信"
+        placeholder="テキストでメッセージを送信"
       />
       <button type="submit" className="border p-2 rounded">
         Send

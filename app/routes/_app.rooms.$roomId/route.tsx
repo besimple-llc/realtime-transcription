@@ -16,11 +16,17 @@ const { socket } = useRoom(loaderData.baseUrl, loaderData.roomId)
   return (
     <div>
       <h2>Real-Time Chat</h2>
-      <CurrentRoomUrl baseUrl={loaderData.baseUrl} />
-      <MessageList socket={socket} />
-      <hr />
-      <TextMessageSender socket={socket} roomId={loaderData.roomId} />
-      <AudioMessageSender socket={socket} roomId={loaderData.roomId} />
+      <CurrentRoomUrl baseUrl={loaderData.baseUrl}/>
+      <div>日本語で話す部屋です。</div>
+      <hr className="my-2"/>
+      <div className="flex flex-row gap-2 items-center">
+        <TextMessageSender socket={socket} roomId={loaderData.roomId}/>
+        <span>or</span>
+        <AudioMessageSender socket={socket} roomId={loaderData.roomId}/>
+      </div>
+      <hr className="my-2"/>
+      <MessageList socket={socket}/>
+
     </div>
   );
 }
