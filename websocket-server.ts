@@ -25,7 +25,10 @@ class MicrosoftTranscriber implements Transcriber {
   constructor(callbacks: {
     onRecognized: (message: Message) => void;
   }) {
-    const speechConfig = SpeechConfig.fromSubscription("4eed816aca7d4593a224d3b7cd004fb8", "eastasia");
+    if (!process.env.MICROSOFT_SPEECH_API_KEY || !process.env.MICROSOFT_SPEECH_API_REGION) {
+      throw new Error("Please set MICROSOFT_SPEECH_API_KEY and MICROSOFT_SPEECH_API_REGION.");
+    }
+    const speechConfig = SpeechConfig.fromSubscription(process.env.MICROSOFT_SPEECH_API_KEY, process.env.MICROSOFT_SPEECH_API_REGION);
     speechConfig.speechRecognitionLanguage = "ja-JP";
 
     const pushStream = AudioInputStream.createPushStream();
