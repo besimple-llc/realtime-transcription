@@ -183,7 +183,7 @@ class Room {
   }
 
   logRoom() {
-    console.log("Language:", this.language, "Members:", this.members, "Transcriber:", this.transcriber.isTranscribing());
+    console.log("Members:", this.members, "Transcriber:", this.transcriber.isTranscribing());
   }
 }
 
@@ -234,12 +234,13 @@ class RoomList {
   }
 
   logRooms() {
-    console.log("log start //////////////")
+    console.log("rooms ----------------------")
     for (const [roomId, room] of this.roomMap.entries()) {
       console.log("Room:", roomId);
       room.logRoom();
+      console.log("---")
     }
-    console.log("log end //////////////")
+    console.log("----------------------------")
   }
 }
 

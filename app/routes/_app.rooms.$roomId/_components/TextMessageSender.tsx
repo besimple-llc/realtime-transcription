@@ -1,20 +1,17 @@
 import {type FormEventHandler, useState} from "react";
-import type {Socket} from "socket.io-client";
-import type {ClientToServerEvents, ServerToClientEvents} from "types/Websocket";
 
 type Props = {
-  socket: Socket<ServerToClientEvents, ClientToServerEvents>;
-  roomId: string;
+  addTextMessage: (text: string) => void;
 }
 
-export const TextMessageSender = ({ socket, roomId }: Props) => {
+export const TextMessageSender = ({ addTextMessage }: Props) => {
 
   const [inputMessage, setInputMessage] = useState("");
 
   const sendMessage: FormEventHandler = (e) => {
     e.preventDefault();
-    if (inputMessage.trim() && socket) {
-      socket.emit("add_text_message", roomId, inputMessage);
+    if (inputMessage.trim()) {
+      addTextMessage(inputMessage);
       setInputMessage("");
     }
   };

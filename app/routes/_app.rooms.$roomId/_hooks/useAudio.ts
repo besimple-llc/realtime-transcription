@@ -36,25 +36,23 @@ export const useAudio = () => {
         int16Data[i] = s;
       }
 
-      // サーバーへ転送
-      // ArrayBufferとして送信
       onMessage(int16Data.buffer);
     };
     source.connect(workletNode);
+
     setRecording(true);
   }
 
   const stopRecording = async () => {
     // 接続解除処理
     const workletNode = workletNodeRef.current;
-    if (workletNode?.context) {
-      workletNode.disconnect();
-      workletNodeRef.current = null;
-    }
+    workletNode?.disconnect();
+    workletNodeRef.current = null;
 
     const audioContext = audioContextRef.current;
     audioContext?.close();
     audioContextRef.current = null;
+
     setRecording(false);
   }
 

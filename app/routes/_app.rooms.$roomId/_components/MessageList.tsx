@@ -1,25 +1,10 @@
-import {useEffect, useState} from "react";
-import type {Socket} from "socket.io-client";
-import type {ClientToServerEvents, Message, ServerToClientEvents} from "types/Websocket";
+import type {Message} from "types/Websocket";
 
 type Props = {
-  socket: Socket<ServerToClientEvents, ClientToServerEvents>;
+  messages: Message[];
 }
 
-export const MessageList = ({socket}: Props) => {
-  const [messages, setMessages] = useState<Message[]>([]);
-
-  useEffect(() => {
-    const handleNewMessage = (message: Message) => {
-      setMessages((prevMessages) => [message, ...prevMessages]);
-    }
-    socket.on("message", handleNewMessage);
-
-    return () => {
-      socket.off("message", handleNewMessage);
-    }
-  }, [socket.on, socket.off]);
-
+export const MessageList = ({messages}: Props) => {
   return (
     <div>
       {messages.length === 0 && (
