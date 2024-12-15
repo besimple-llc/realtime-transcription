@@ -1,52 +1,37 @@
-import {useRef, useState} from "react";
 import type {Socket} from "socket.io-client";
 import type {ClientToServerEvents, ServerToClientEvents} from "types/Websocket";
+import {useAudio} from "~/routes/_app.rooms.$roomId/_hooks/useAudio";
 
 type Props = {
   socket: Socket<ServerToClientEvents, ClientToServerEvents>;
   roomId: string;
-}
+};
 
 export const AudioMessageSender = ({ socket, roomId }: Props) => {
-  const [isTranscribing, setTranscribing] = useState(false)
+  const audio = useAudio();
 
-  const stream = useRef<MediaStream>(null);
+
   const startTranscription = async () => {
-    stream.current = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const audioContext = new AudioContext({ sampleRate: 16000 });
-    const source = audioContext.createMediaStreamSource(stream.current);
-    const processor = audioContext.createScriptProcessor(4096, 1, 1);
+    await audio.startRecording((buffer) => {
+      socket.emit("add_audio_message", roomId, buffer);
+    })
+  };
 
-    processor.onaudioprocess = (e) => {
-      const inputData = e.inputBuffer.getChannelData(0);
-      // Float32 -> Int16に変換
-      const pcmData = new Int16Array(inputData.length);
-      for (let i = 0; i < inputData.length; i++) {
-        pcmData[i] = inputData[i] * 0x7FFF;
-      }
-      socket.emit("add_audio_message", roomId, pcmData.buffer);
-    };
+  const stopTranscription = async () => {
+    await audio.stopRecording();
+  };
 
-    source.connect(processor);
-    processor.connect(audioContext.destination);
-    setTranscribing(true)
-  }
-
-  const stopTranscription = () => {
-    for (const mediaStreamTrack of stream.current?.getTracks() || []) {
-      mediaStreamTrack.stop()
-    }
-    stream.current = null;
-    setTranscribing(false)
-  }
-
-  if (isTranscribing) {
+  if (audio.isRecording) {
     return (
-      <button type="button" className="border p-2 rounded" onClick={stopTranscription}>送信を停止する</button>
-    )
+      <button type="button" className="border p-2 rounded" onClick={stopTranscription}>
+        音声メッセージの送信を停止する
+      </button>
+    );
   }
 
   return (
-    <button type="button" className="border p-2 rounded" onClick={startTranscription}>音声でメッセージを送信</button>
-  )
-}
+    <button type="button" className="border p-2 rounded" onClick={startTranscription}>
+      音声メッセージの送信を開始する
+    </button>
+  );
+};
