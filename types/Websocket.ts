@@ -1,10 +1,12 @@
+import type {Language} from "./Language";
+
 export interface ServerToClientEvents {
   message: (message: Message) => void;
-  joined: (roomId: string) => void;
-  left: (roomId: string) => void;
+  created_room: (roomId: string) => void;
 }
 
 export interface ClientToServerEvents {
+  create_room: (language: Language) => void;
   join: (roomId: string) => void;
   leave: (roomId: string) => void;
   add_text_message: (roomId: string, text: string) => void;

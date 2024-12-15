@@ -1,17 +1,23 @@
 import type {Server as HttpServer, IncomingMessage, ServerResponse} from "node:http";
+import type {TargetLanguageCode} from "deepl-node";
 import * as deepl from "deepl-node";
+import type {SourceLanguageCode} from "deepl-node/dist/types";
 import {
   AudioConfig,
   AudioInputStream,
   CancellationReason,
   type PushAudioInputStream,
   ResultReason,
-  SpeechConfig,
   SpeechTranslationConfig,
   TranslationRecognizer
 } from "microsoft-cognitiveservices-speech-sdk";
 import {Server} from "socket.io";
+import {v7} from "uuid";
+import type {Language} from "./types/Language";
 import type {ClientToServerEvents, Message, ServerToClientEvents} from "./types/Websocket";
+
+type WebsocketServer = Server<ClientToServerEvents, ServerToClientEvents>
+type RoomServer = ReturnType<WebsocketServer["to"]>
 
 interface Transcriber {
   start: () => void;
@@ -24,37 +30,42 @@ class MicrosoftTranscriber implements Transcriber {
   private recognizer: TranslationRecognizer;
   private pushStream: PushAudioInputStream;
   private transcribing = false;
-  constructor(callbacks: {
+  constructor(language: Language, callbacks: {
     onRecognized: (message: Message) => void;
   }) {
     if (!process.env.MICROSOFT_SPEECH_API_KEY || !process.env.MICROSOFT_SPEECH_API_REGION) {
       throw new Error("Please set MICROSOFT_SPEECH_API_KEY and MICROSOFT_SPEECH_API_REGION.");
     }
     const speechConfig = SpeechTranslationConfig.fromSubscription(process.env.MICROSOFT_SPEECH_API_KEY, process.env.MICROSOFT_SPEECH_API_REGION);
-    speechConfig.speechRecognitionLanguage = "ja-JP";
-    speechConfig.addTargetLanguage("en");
+    if (language === "ja") {
+      speechConfig.speechRecognitionLanguage = "ja-JP";
+      speechConfig.addTargetLanguage("en");
+    } else if (language === "en") {
+      speechConfig.speechRecognitionLanguage = "en-US";
+      speechConfig.addTargetLanguage("ja");
+    }
 
     const pushStream = AudioInputStream.createPushStream();
     const audioConfig = AudioConfig.fromStreamInput(pushStream);
     const recognizer = new TranslationRecognizer(speechConfig, audioConfig);
 
-    recognizer.recognized = (s, e) => {
+    recognizer.recognized = (_, e) => {
       if (e.result.reason === ResultReason.TranslatedSpeech) {
-        console.log("RECOGNIZED: Text=", {
-          ja: e.result.text,
-          en: e.result.translations.get("en"),
-        });
+        const messageJa = language === "ja" ? e.result.text : e.result.translations.get("ja");
+        const messageEn = language === "en" ? e.result.text : e.result.translations.get("en");
+        console.log("RECOGNIZED: Text=", { ja: messageJa, en: messageEn});
         callbacks.onRecognized({
-          messageJa: e.result.text,
-          messageEn: e.result.translations.get("en"),
+          messageJa,
+          messageEn,
           datetime: new Date().toISOString(),
         })
+
       } else if (e.result.reason === ResultReason.NoMatch) {
         console.log("NOMATCH: Speech could not be recognized.");
       }
     };
 
-    recognizer.canceled = (s, e) => {
+    recognizer.canceled = (_, e) => {
       console.log(`CANCELED: Reason=${e.reason}`);
       if (e.reason === CancellationReason.Error) {
         console.log(`"CANCELED: ErrorCode=${e.errorCode}`);
@@ -89,7 +100,7 @@ class MicrosoftTranscriber implements Transcriber {
   }
 
   transcribe(arrayBuffer: ArrayBuffer) {
-    this.pushStream.write(arrayBuffer.slice());
+    this.pushStream.write(arrayBuffer);
   }
 }
 
@@ -97,18 +108,21 @@ class Room {
   private transcriber: Transcriber;
   private readonly messages: Message[] = [];
   private readonly members: Set<string> = new Set();
-  private callbacks: {
-    onAddMessage: (message: Message) => void;
-  }
-  constructor(callbacks: {
-    onAddMessage: (message: Message) => void;
-  }) {
-    this.callbacks = callbacks;
-    this.transcriber = new MicrosoftTranscriber({
+  private language: string;
+  private roomServer: RoomServer;
+
+  constructor(roomServer: RoomServer, language: Language) {
+    this.roomServer = roomServer;
+    this.transcriber = new MicrosoftTranscriber(language, {
       onRecognized: (message) => {
         this.addMessage(message);
       }
     });
+    if (["ja", "en"].includes(language)) {
+      this.language = language;
+    } else {
+      this.language = "ja";
+    }
   }
 
   join(who: string) {
@@ -129,24 +143,34 @@ class Room {
 
   private addMessage(message: Message) {
     this.messages.push(message);
-    this.callbacks.onAddMessage(message);
+    this.roomServer.emit("message", message);
   }
 
   async addTextMessage(text: string) {
+    const messageJa = this.language === "ja" ? text : await this.translateTextFromEnToJa(text);
+    const messageEn = this.language === "en" ? text : await this.translateTextFromJaToEn(text);
     const message = {
-      messageJa: text,
-      messageEn: await this.translateTextFromJaToEn(text),
+      messageJa: messageJa,
+      messageEn: messageEn,
       datetime: new Date().toISOString(),
     }
     this.addMessage(message);
   }
 
   private async translateTextFromJaToEn(text: string) {
+    return await this.translateText(text, "ja", "en-US")
+  }
+
+  private async translateTextFromEnToJa(text: string) {
+    return await this.translateText(text, "en", "ja")
+  }
+
+  private async translateText(text: string, from:  SourceLanguageCode,to: TargetLanguageCode) {
     if (!process.env.DEEPL_API_KEY) {
       throw new Error("Please set DEEPL_API_KEY.");
     }
     const deepL = new deepl.Translator(process.env.DEEPL_API_KEY);
-    const translationResult = await deepL.translateText(text, "ja", "en-US")
+    const translationResult = await deepL.translateText(text, from, to)
     return translationResult.text
   }
 
@@ -157,59 +181,79 @@ class Room {
   getMessages() {
     return this.messages;
   }
+
+  logRoom() {
+    console.log("Language:", this.language, "Members:", this.members, "Transcriber:", this.transcriber.isTranscribing());
+  }
 }
 
 class RoomList {
-  _rooms: Map<string, Room>;
+  private roomMap: Map<string, Room>;
+  private socketServer: WebsocketServer;
 
-  constructor() {
-    this._rooms = new Map();
+  constructor(socketServer: WebsocketServer) {
+    this.roomMap = new Map();
+    this.socketServer = socketServer;
   }
 
   getRoom(roomId: string) {
-    return this._rooms.get(roomId);
+    return this.roomMap.get(roomId);
   }
 
-  joinRoom(roomId: string, who: string, messageSubscriber: (message: Message) => void) {
+  createRoom(language: Language) {
+    console.log("Creating room with language: ", language);
+    const roomId = `${language}-room-${v7()}`;
+    this.createAndSetRoom(roomId);
+    return roomId;
+  }
+
+  joinRoom(roomId: string, who: string) {
     console.log("Joining room:", { roomId, who });
-    let room = this.getRoom(roomId);
-    if (!room) {
-      room = new Room({
-        onAddMessage: messageSubscriber
-      });
-      this._rooms.set(roomId, room);
-    }
+    const room = this.getRoom(roomId) || this.createAndSetRoom(roomId);
     room.join(who);
+    return room;
+  }
+
+  private createAndSetRoom(roomId: string) {
+    const room = new Room(this.socketServer.to(roomId), roomId.substring(0, 2) as Language);
+    this.roomMap.set(roomId, room);
     return room;
   }
 
   leaveRoom(roomId: string, who: string) {
     console.log("Leaving room:", { roomId, who });
     const room = this.getRoom(roomId);
-    const leftMemberCount = room?.leave(who);
-    if (leftMemberCount === 0) {
-      this._rooms.delete(roomId);
-    }
+    room?.leave(who);
   }
 
   leaveAllRooms(who: string) {
     console.log("Leaving all rooms:", { who });
-    for (const roomId of this._rooms.keys()) {
+    for (const roomId of this.roomMap.keys()) {
       this.leaveRoom(roomId, who);
     }
+  }
+
+  logRooms() {
+    console.log("log start //////////////")
+    for (const [roomId, room] of this.roomMap.entries()) {
+      console.log("Room:", roomId);
+      room.logRoom();
+    }
+    console.log("log end //////////////")
   }
 }
 
 export const setUpWebSocketServer = (httpServer: HttpServer<typeof IncomingMessage, typeof ServerResponse>) => {
-  const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer);
+  const server = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer);
 
-  const rooms = new RoomList();
+  const rooms = new RoomList(server);
 
-  const speechConfig = SpeechConfig.fromSubscription("4eed816aca7d4593a224d3b7cd004fb8", "eastasia");
-  speechConfig.speechRecognitionLanguage = "ja-JP";
+  setInterval(() => {
+    rooms.logRooms();
+  }, 10000);
 
   // WebSocket connection handler
-  io.on("connection", (socket) => {
+  server.on("connection", (socket) => {
     console.log("A client connected: ", socket.id);
 
     socket.on("disconnect", () => {
@@ -219,13 +263,16 @@ export const setUpWebSocketServer = (httpServer: HttpServer<typeof IncomingMessa
 
     socket.on("join", (roomId) => {
       socket.join(roomId);
-      const room = rooms.joinRoom(roomId, socket.id, (message) => {
-        io.to(roomId).emit("message", message);
-      });
+      const room = rooms.joinRoom(roomId, socket.id);
       const messages = room.getMessages();
       for (const message of messages) {
         socket.emit("message", message);
       }
+    });
+
+    socket.on("create_room", (language) => {
+      const roomId = rooms.createRoom(language);
+      socket.emit("created_room", roomId);
     });
 
     socket.on("leave", (roomId) => {
@@ -242,3 +289,4 @@ export const setUpWebSocketServer = (httpServer: HttpServer<typeof IncomingMessa
     });
   });
 };
+
