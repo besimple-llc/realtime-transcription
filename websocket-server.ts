@@ -1,4 +1,5 @@
 import type {Server as HttpServer, IncomingMessage, ServerResponse} from "node:http";
+import * as deepl from "deepl-node";
 import {
   AudioConfig,
   AudioInputStream,
@@ -58,7 +59,6 @@ class MicrosoftTranscriber implements Transcriber {
       if (e.reason === CancellationReason.Error) {
         console.log(`"CANCELED: ErrorCode=${e.errorCode}`);
         console.log(`"CANCELED: ErrorDetails=${e.errorDetails}`);
-        console.log("CANCELED: Did you set the speech resource key and region values?");
       }
       this.stop();
     };
@@ -100,7 +100,6 @@ class Room {
   private callbacks: {
     onAddMessage: (message: Message) => void;
   }
-
   constructor(callbacks: {
     onAddMessage: (message: Message) => void;
   }) {
@@ -133,13 +132,22 @@ class Room {
     this.callbacks.onAddMessage(message);
   }
 
-  addTextMessage(text: string) {
+  async addTextMessage(text: string) {
     const message = {
       messageJa: text,
-      messageEn: "",
+      messageEn: await this.translateTextFromJaToEn(text),
       datetime: new Date().toISOString(),
     }
     this.addMessage(message);
+  }
+
+  private async translateTextFromJaToEn(text: string) {
+    if (!process.env.DEEPL_API_KEY) {
+      throw new Error("Please set DEEPL_API_KEY.");
+    }
+    const deepL = new deepl.Translator(process.env.DEEPL_API_KEY);
+    const translationResult = await deepL.translateText(text, "ja", "en-US")
+    return translationResult.text
   }
 
   addAudioMessage(arrayBuffer: ArrayBuffer) {
