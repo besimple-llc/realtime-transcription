@@ -18,12 +18,13 @@ export class Room {
     this.roomId = RoomId.generate();
     this.roomMessages = new RoomMessages(addMessageCallback);
     // TODO: 特定のインフラに依存しないように抽象化する
-    this.jaTranscriber = new MicrosoftTranscriber("ja", {
-      onRecognized: this.roomMessages.addMessage,
-    });
-    this.enTranscriber = new MicrosoftTranscriber("en", {
-      onRecognized: this.roomMessages.addMessage,
-    });
+    const transcribeCallback = {
+      onRecognized: (message: Message) => {
+        this.roomMessages.addMessage(message);
+      },
+    };
+    this.jaTranscriber = new MicrosoftTranscriber("ja", transcribeCallback);
+    this.enTranscriber = new MicrosoftTranscriber("en", transcribeCallback);
     this.roomMembers = new RoomMembers();
   }
 

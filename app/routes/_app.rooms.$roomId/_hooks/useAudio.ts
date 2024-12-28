@@ -22,22 +22,35 @@ export const useAudio = () => {
     const workletNode = new AudioWorkletNode(audioContext, "speech-processor");
     workletNodeRef.current = workletNode;
 
-    // AudioWorkletNodeからメッセージを受け取る
+    const frameSize = 320; // 16kHz * 0.02秒 = 320サンプル
+    let leftoverBuffer: Int16Array | null = null;
+
     workletNode.port.onmessage = (event) => {
-      // event.data は Float32Array(Mono)
       const float32Data = event.data as Float32Array;
 
-      // Float32 -> Int16 PCM変換
+      // Float32 -> Int16へ変換
       const int16Data = new Int16Array(float32Data.length);
       for (let i = 0; i < float32Data.length; i++) {
-        let s = float32Data[i] * 32767; // Float32(-1 to 1) -> Int16(-32767 to 32767)
-        // クリッピング
-        if (s < -32768) s = -32768;
-        if (s > 32767) s = 32767;
-        int16Data[i] = s;
+        int16Data[i] = Math.max(-32768, Math.min(32767, float32Data[i] * 32767));
       }
 
-      onMessage(int16Data.buffer);
+      // 前の残りデータと結合
+      const fullBuffer = leftoverBuffer ? new Int16Array(leftoverBuffer.length + int16Data.length) : int16Data;
+      if (leftoverBuffer) {
+        fullBuffer.set(leftoverBuffer);
+        fullBuffer.set(int16Data, leftoverBuffer.length);
+      }
+
+      // フレーム分割
+      let offset = 0;
+      while (offset + frameSize <= fullBuffer.length) {
+        const frame = fullBuffer.slice(offset, offset + frameSize);
+        onMessage(frame.buffer); // 送信
+        offset += frameSize;
+      }
+
+      // 残りデータを保存
+      leftoverBuffer = fullBuffer.slice(offset);
     };
     source.connect(workletNode);
 

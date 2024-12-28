@@ -40,6 +40,10 @@ export class MicrosoftTranscriber implements ITranscriber {
     const audioConfig = AudioConfig.fromStreamInput(pushStream);
     const recognizer = new TranslationRecognizer(speechConfig, audioConfig);
 
+    recognizer.recognizing = (_, e) => {
+      console.log(`RECOGNIZING: Text=${e.result.text}`);
+    };
+
     recognizer.recognized = (_, e) => {
       if (e.result.reason === ResultReason.TranslatedSpeech) {
         const messageJa = language === "ja" ? e.result.text : e.result.translations.get("ja");
