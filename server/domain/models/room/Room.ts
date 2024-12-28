@@ -2,8 +2,8 @@ import { RoomId } from "@/server/domain/models/room/RoomId";
 import { RoomMembers } from "@/server/domain/models/room/RoomMembers";
 import { RoomMessages } from "@/server/domain/models/room/RoomMessages";
 import type { ITranscriber } from "@/server/domain/models/transcriber/ITranscriber";
-import { MicrosoftTranscriber } from "@/server/domain/models/transcriber/MicrosoftTranscriber";
 import type { User } from "@/server/domain/models/user/User";
+import { MicrosoftTranscriber } from "@/server/infra/transcription/MicrosoftTranscriber";
 import type { Language } from "@/types/Language";
 import type { Message } from "@/types/Websocket";
 
@@ -16,6 +16,7 @@ export class Room {
   constructor(language: Language, addMessageCallback: (message: Message) => void) {
     this.roomId = RoomId.from(language);
     this.roomMessages = new RoomMessages(language, addMessageCallback);
+    // TODO: 特定のインフラに依存しないように抽象化する
     this.transcriber = new MicrosoftTranscriber(language, {
       onRecognized: this.roomMessages.addMessage,
     });

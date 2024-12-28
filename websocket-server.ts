@@ -2,7 +2,7 @@ import type { Server as HttpServer, IncomingMessage, ServerResponse } from "node
 import type { IRoomRepository } from "@/server/domain/models/room/IRoomRepository";
 import { Room } from "@/server/domain/models/room/Room";
 import { User } from "@/server/domain/models/user/User";
-import { InMemoryRoomRepository } from "@/server/infra/inMemory/InMemoryRoomStore";
+import { InMemoryRoomRepository } from "@/server/infra/persistence/inMemory/InMemoryRoomStore";
 import { Server } from "socket.io";
 import type { ClientToServerEvents, ServerToClientEvents, WebsocketServer } from "./types/Websocket";
 
@@ -12,6 +12,7 @@ export class WebSocketServer {
 
   constructor(httpServer: HttpServer<typeof IncomingMessage, typeof ServerResponse>) {
     this.io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer);
+    // TODO: 特定のインフラに依存しないように抽象化する
     this.roomRepository = new InMemoryRoomRepository();
   }
 

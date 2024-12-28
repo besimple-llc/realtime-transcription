@@ -1,5 +1,5 @@
-import { DeepLTranslator } from "@/server/domain/models/translator/DeepLTranslator";
 import type { ITranslator } from "@/server/domain/models/translator/ITranslator";
+import { DeepLTranslator } from "@/server/infra/translate/DeepLTranslator";
 import type { Language } from "@/types/Language";
 import type { Message } from "@/types/Websocket";
 
@@ -11,6 +11,7 @@ export class RoomMessages {
 
   constructor(language: Language, addMessageCallback: (message: Message) => void) {
     this.language = language;
+    // TODO: 特定のインフラに依存しないように抽象化する
     this.translator = new DeepLTranslator();
     this.addMessageCallback = addMessageCallback;
   }
