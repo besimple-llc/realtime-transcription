@@ -1,4 +1,4 @@
-import {useAudio} from "~/routes/_app.rooms.$roomId/_hooks/useAudio";
+import { useAudio } from "~/routes/_app.rooms.$roomId/_hooks/useAudio";
 
 type Props = {
   addAudioMessage: (buffer: ArrayBuffer) => void;
@@ -7,11 +7,10 @@ type Props = {
 export const AudioMessageSender = ({ addAudioMessage }: Props) => {
   const audio = useAudio();
 
-
   const startTranscription = async () => {
     await audio.startRecording((buffer) => {
       addAudioMessage(buffer);
-    })
+    });
   };
 
   const stopTranscription = async () => {

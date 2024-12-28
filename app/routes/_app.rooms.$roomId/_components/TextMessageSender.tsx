@@ -1,11 +1,10 @@
-import {type FormEventHandler, useState} from "react";
+import { type FormEventHandler, useState } from "react";
 
 type Props = {
   addTextMessage: (text: string) => void;
-}
+};
 
 export const TextMessageSender = ({ addTextMessage }: Props) => {
-
   const [inputMessage, setInputMessage] = useState("");
 
   const sendMessage: FormEventHandler = (e) => {
@@ -29,5 +28,5 @@ export const TextMessageSender = ({ addTextMessage }: Props) => {
         Send
       </button>
     </form>
-  )
-}
+  );
+};

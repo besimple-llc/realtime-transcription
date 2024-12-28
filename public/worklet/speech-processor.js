@@ -3,7 +3,6 @@
  This file will be loaded only in recent browsers that supports Audio worklet it is
  currently in js because it needs to be in es6 */
 class SpeechProcessor extends AudioWorkletProcessor {
-
   process(inputs) {
     const input = inputs[0];
     const output = []; // Make sure output array can be assigned to
@@ -15,4 +14,4 @@ class SpeechProcessor extends AudioWorkletProcessor {
   }
 }
 
-registerProcessor('speech-processor', SpeechProcessor);
+registerProcessor("speech-processor", SpeechProcessor);

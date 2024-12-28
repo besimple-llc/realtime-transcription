@@ -1,10 +1,10 @@
-import type {Message} from "types/Websocket";
+import type { Message } from "types/Websocket";
 
 type Props = {
   messages: Message[];
-}
+};
 
-export const MessageList = ({messages}: Props) => {
+export const MessageList = ({ messages }: Props) => {
   return (
     <div>
       {messages.length === 0 && (
@@ -21,5 +21,5 @@ export const MessageList = ({messages}: Props) => {
         </div>
       ))}
     </div>
-  )
-}
+  );
+};
