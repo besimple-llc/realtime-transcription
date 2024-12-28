@@ -15,7 +15,7 @@ WORKDIR /app
 RUN npm run build
 
 FROM node:20-alpine
-COPY ./package.json package-lock.json server.ts websocket-server.ts /app/
+COPY ./package.json package-lock.json server.ts websocket-server.ts tsconfig.json tsconfig.node.json /app/
 COPY --from=production-dependencies-env /app/node_modules /app/node_modules
 COPY --from=build-env /app/build /app/build
 RUN npm install -g tsx
