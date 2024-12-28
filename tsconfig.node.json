@@ -1,6 +1,6 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["server.ts", "tailwind.config.ts", "vite.config.ts", "websocket-server.ts", "types/**/*"],
+  "include": ["server.ts", "tailwind.config.ts", "vite.config.ts", "websocket-server.ts", "types/**/*", "server/**/*"],
   "compilerOptions": {
     "composite": true,
     "strict": true,
@@ -8,6 +8,12 @@
     "lib": ["ES2022"],
     "target": "ES2022",
     "module": "ES2022",
-    "moduleResolution": "Node"
+    "moduleResolution": "Node",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "paths": {
+      "@/server/*": ["./server/*"],
+      "@/types/*": ["./types/*"]
+    }
   }
 }

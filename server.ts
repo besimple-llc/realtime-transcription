@@ -1,8 +1,8 @@
-import {createServer} from "node:http";
+import { createServer } from "node:http";
 import compression from "compression";
 import express from "express";
 import morgan from "morgan";
-import {setUpWebSocketServer} from "./websocket-server";
+import { WebSocketServer } from "./websocket-server";
 
 // Short-circuit the type-checking of the built output.
 const BUILD_PATH = "./build/server/index.js";
@@ -45,7 +45,8 @@ if (DEVELOPMENT) {
 
 app.use(morgan("tiny"));
 
-setUpWebSocketServer(httpServer);
+const websocketServer = new WebSocketServer(httpServer);
+websocketServer.setUp();
 
 httpServer.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

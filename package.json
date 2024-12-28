@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "build": "react-router build",
-    "dev": "cross-env NODE_ENV=development npx tsx server.ts",
-    "start": "npx tsx server.ts",
+    "dev": "cross-env NODE_ENV=development npx tsx --tsconfig ./tsconfig.node.json server.ts",
+    "start": "npx tsx --tsconfig ./tsconfig.node.json server.ts",
     "typegen:watch": "react-router typegen --watch",
     "typecheck": "react-router typegen && tsc",
     "check": "npx @biomejs/biome check --write ."
@@ -23,8 +23,10 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router": "^7.0.2",
+    "reflect-metadata": "^0.2.2",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
+    "tsconfig-paths": "^4.2.0",
     "uuid": "^11.0.3"
   },
   "devDependencies": {
