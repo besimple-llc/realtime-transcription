@@ -1,10 +1,11 @@
-import {useCallback, useEffect, useRef, useState} from "react";
-import {type Socket, io } from "socket.io-client";
-import type {Language} from "types/Language";
-import type {ClientToServerEvents, Message, ServerToClientEvents} from "types/Websocket";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { type Socket, io } from "socket.io-client";
+import type { Language } from "types/Language";
+import type { ClientToServerEvents, Message, ServerToClientEvents } from "types/Websocket";
 
 export const useRoom = (baseUrl: string, roomId: string) => {
   const socketRef = useRef<Socket<ServerToClientEvents, ClientToServerEvents>>(io(baseUrl));
+  const [language, setLanguage] = useState<Language>("ja");
   const [messages, setMessages] = useState<Message[]>([]);
 
   const joinRoom = useCallback(() => {
@@ -21,13 +22,19 @@ export const useRoom = (baseUrl: string, roomId: string) => {
     setMessages((prevMessages) => [message, ...prevMessages]);
   }, []);
 
-  const addTextMessage = useCallback((text: string) => {
-    socketRef.current.emit("add_text_message", roomId, text);
-  }, [roomId]);
+  const addTextMessage = useCallback(
+    (text: string) => {
+      socketRef.current.emit("add_text_message", roomId, text, language);
+    },
+    [roomId, language],
+  );
 
-  const addAudioMessage = useCallback((buffer: ArrayBuffer) => {
-    socketRef.current.emit("add_audio_message", roomId, buffer);
-  }, [roomId]);
+  const addAudioMessage = useCallback(
+    (buffer: ArrayBuffer) => {
+      socketRef.current.emit("add_audio_message", roomId, buffer, language);
+    },
+    [roomId, language],
+  );
 
   useEffect(() => {
     socketRef.current.connect();
@@ -40,7 +47,9 @@ export const useRoom = (baseUrl: string, roomId: string) => {
     };
   }, [joinRoom, leaveRoom, messageEventHandler]);
 
-  const language = roomId.substring(0, 2) as Language;
+  const switchLanguage = useCallback(() => {
+    setLanguage((prevLanguage) => (prevLanguage === "ja" ? "en" : "ja"));
+  }, []);
 
-  return { language, messages, addTextMessage, addAudioMessage };
-}
+  return { language, switchLanguage, messages, addTextMessage, addAudioMessage };
+};

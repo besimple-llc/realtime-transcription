@@ -1,6 +1,6 @@
 export interface ITranscriber {
   start: () => void;
   stop: () => void;
-  isTranscribing: () => boolean;
+  get transcribing(): boolean;
   transcribe: (arrayBuffer: ArrayBuffer) => void;
 }

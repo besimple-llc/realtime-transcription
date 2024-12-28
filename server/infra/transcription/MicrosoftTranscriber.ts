@@ -1,3 +1,4 @@
+import type { ITranscriber } from "@/server/domain/models/transcriber/ITranscriber";
 import type { Language } from "@/types/Language";
 import type { Message } from "@/types/Websocket";
 import {
@@ -9,12 +10,11 @@ import {
   SpeechTranslationConfig,
   TranslationRecognizer,
 } from "microsoft-cognitiveservices-speech-sdk";
-import type { ITranscriber } from "./ITranscriber";
 
 export class MicrosoftTranscriber implements ITranscriber {
   private recognizer: TranslationRecognizer;
   private pushStream: PushAudioInputStream;
-  private transcribing = false;
+  private _transcribing = false;
   constructor(
     language: Language,
     callbacks: {
@@ -58,10 +58,9 @@ export class MicrosoftTranscriber implements ITranscriber {
     recognizer.canceled = (_, e) => {
       console.log(`CANCELED: Reason=${e.reason}`);
       if (e.reason === CancellationReason.Error) {
-        console.log(`"CANCELED: ErrorCode=${e.errorCode}`);
-        console.log(`"CANCELED: ErrorDetails=${e.errorDetails}`);
+        console.log(`CANCELED: ErrorCode=${e.errorCode}`);
+        console.log(`CANCELED: ErrorDetails=${e.errorDetails}`);
       }
-      this.stop();
     };
 
     recognizer.sessionStopped = () => {
@@ -75,21 +74,32 @@ export class MicrosoftTranscriber implements ITranscriber {
 
   start() {
     console.log("------- Transcribe start --------");
-    this.recognizer.startContinuousRecognitionAsync();
-    this.transcribing = true;
+    this.recognizer.startContinuousRecognitionAsync(() => {
+      this._transcribing = true;
+    });
   }
 
   stop() {
     console.log("------- Transcribe stop --------");
-    this.recognizer.stopContinuousRecognitionAsync();
-    this.transcribing = false;
+    this.recognizer.stopContinuousRecognitionAsync(() => {
+      this._transcribing = false;
+    });
   }
 
-  isTranscribing() {
-    return this.transcribing;
+  get transcribing() {
+    return this._transcribing;
   }
 
   transcribe(arrayBuffer: ArrayBuffer) {
-    this.pushStream.write(arrayBuffer);
+    if (!arrayBuffer) {
+      console.error("transcribe() called with an invalid arrayBuffer");
+      return;
+    }
+
+    try {
+      this.pushStream.write(arrayBuffer);
+    } catch (error) {
+      console.error("Error writing to PushAudioInputStream:", error);
+    }
   }
 }

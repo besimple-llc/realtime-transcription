@@ -17,6 +17,13 @@ export class WebSocketServer {
   }
 
   setUp() {
+    setInterval(async () => {
+      const list = await this.roomRepository.listRooms();
+      for (const room of list) {
+        console.log(room.toString());
+      }
+    }, 5000);
+
     // WebSocket connection handler
     this.io.on("connection", (socket) => {
       // console.log("A client connected: ", socket.id);
@@ -25,8 +32,8 @@ export class WebSocketServer {
         // console.log("A client disconnected: ", socket.id);
       });
 
-      socket.on("create_room", async (language) => {
-        const room = new Room(language, (message) => {
+      socket.on("create_room", async () => {
+        const room = new Room((message) => {
           this.io.to(room.id).emit("message", message);
         });
         await this.roomRepository.createRoom(room);
@@ -57,14 +64,14 @@ export class WebSocketServer {
         room.leave(user);
       });
 
-      socket.on("add_text_message", async (roomId, text) => {
+      socket.on("add_text_message", async (roomId, text, language) => {
         const room = await this.roomRepository.getRoom(roomId);
-        room?.addTextMessage(text);
+        room?.addTextMessage(text, language);
       });
 
-      socket.on("add_audio_message", async (roomId, arrayBuffer) => {
+      socket.on("add_audio_message", async (roomId, arrayBuffer, language) => {
         const room = await this.roomRepository.getRoom(roomId);
-        room?.addAudioMessage(arrayBuffer);
+        room?.addAudioMessage(arrayBuffer, language);
       });
     });
   }

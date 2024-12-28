@@ -11,13 +11,17 @@ export class Room {
   private readonly roomId: RoomId;
   private readonly roomMessages: RoomMessages;
   private readonly roomMembers: RoomMembers;
-  private readonly transcriber: ITranscriber;
+  private readonly jaTranscriber: ITranscriber;
+  private readonly enTranscriber: ITranscriber;
 
-  constructor(language: Language, addMessageCallback: (message: Message) => void) {
-    this.roomId = RoomId.from(language);
-    this.roomMessages = new RoomMessages(language, addMessageCallback);
+  constructor(addMessageCallback: (message: Message) => void) {
+    this.roomId = RoomId.generate();
+    this.roomMessages = new RoomMessages(addMessageCallback);
     // TODO: 特定のインフラに依存しないように抽象化する
-    this.transcriber = new MicrosoftTranscriber(language, {
+    this.jaTranscriber = new MicrosoftTranscriber("ja", {
+      onRecognized: this.roomMessages.addMessage,
+    });
+    this.enTranscriber = new MicrosoftTranscriber("en", {
       onRecognized: this.roomMessages.addMessage,
     });
     this.roomMembers = new RoomMembers();
@@ -33,24 +37,37 @@ export class Room {
 
   join(user: User) {
     this.roomMembers.join(user);
-    if (this.roomMembers.isEmpty && !this.transcriber.isTranscribing()) {
-      this.transcriber.start();
+    if (this.roomMembers.isEmpty) {
+      return;
+    }
+
+    if (!this.jaTranscriber.transcribing) {
+      this.jaTranscriber.start();
+    }
+
+    if (!this.enTranscriber.transcribing) {
+      this.enTranscriber.start();
     }
   }
 
   leave(user: User) {
     this.roomMembers.leave(user);
     if (this.roomMembers.isEmpty) {
-      this.transcriber.stop();
+      this.jaTranscriber.stop();
+      this.enTranscriber.stop();
     }
   }
 
-  async addTextMessage(text: string) {
-    await this.roomMessages.addTextMessage(text);
+  async addTextMessage(text: string, language: Language) {
+    await this.roomMessages.addTextMessage(text, language);
   }
 
-  addAudioMessage(arrayBuffer: ArrayBuffer) {
-    this.transcriber.transcribe(arrayBuffer);
+  addAudioMessage(arrayBuffer: ArrayBuffer, language: Language) {
+    if (language === "ja") {
+      this.jaTranscriber.transcribe(arrayBuffer);
+    } else if (language === "en") {
+      this.enTranscriber.transcribe(arrayBuffer);
+    }
   }
 
   toString() {
@@ -59,7 +76,10 @@ export class Room {
         id: this.id,
         members: this.roomMembers.ids,
         messages: this.messages,
-        isTranscribing: this.transcriber.isTranscribing(),
+        isTranscribing: {
+          ja: this.jaTranscriber.transcribing,
+          en: this.enTranscriber.transcribing,
+        },
       },
       null,
       4,

@@ -1,4 +1,4 @@
-import {useRef, useState} from "react";
+import { useRef, useState } from "react";
 
 export const useAudio = () => {
   const [isRecording, setRecording] = useState(false);
@@ -42,7 +42,7 @@ export const useAudio = () => {
     source.connect(workletNode);
 
     setRecording(true);
-  }
+  };
 
   const stopRecording = async () => {
     try {
@@ -55,7 +55,7 @@ export const useAudio = () => {
 
       const audioContext = audioContextRef.current;
       if (audioContext) {
-        await audioContext.close();  // 非同期処理を待機
+        await audioContext.close(); // 非同期処理を待機
         audioContextRef.current = null;
       }
 
@@ -68,14 +68,14 @@ export const useAudio = () => {
         mediaStreamRef.current = null;
       }
     } catch (error) {
-      console.error('Error stopping the recording:', error);
+      console.error("Error stopping the recording:", error);
     }
     setRecording(false);
-  }
+  };
 
   return {
     startRecording,
     stopRecording,
     isRecording,
-  }
-}
+  };
+};

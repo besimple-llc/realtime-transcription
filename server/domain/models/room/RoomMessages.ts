@@ -4,13 +4,11 @@ import type { Language } from "@/types/Language";
 import type { Message } from "@/types/Websocket";
 
 export class RoomMessages {
-  private readonly language: Language;
   private readonly _messages: Message[] = [];
   private readonly translator: ITranslator;
   private readonly addMessageCallback: (message: Message) => void;
 
-  constructor(language: Language, addMessageCallback: (message: Message) => void) {
-    this.language = language;
+  constructor(addMessageCallback: (message: Message) => void) {
     // TODO: 特定のインフラに依存しないように抽象化する
     this.translator = new DeepLTranslator();
     this.addMessageCallback = addMessageCallback;
@@ -20,9 +18,9 @@ export class RoomMessages {
     return this._messages;
   }
 
-  async addTextMessage(text: string) {
-    const messageJa = this.language === "ja" ? text : await this.translator.translate(text, "ja", "en");
-    const messageEn = this.language === "en" ? text : await this.translator.translate(text, "en", "ja");
+  async addTextMessage(text: string, language: Language) {
+    const messageJa = language === "ja" ? text : await this.translator.translate(text, "en", "ja");
+    const messageEn = language === "en" ? text : await this.translator.translate(text, "ja", "en");
     const message = {
       messageJa: messageJa,
       messageEn: messageEn,

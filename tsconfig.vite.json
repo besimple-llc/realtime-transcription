@@ -12,7 +12,8 @@
     "baseUrl": ".",
     "rootDirs": [".", "./.react-router/types"],
     "paths": {
-      "~/*": ["./app/*"]
+      "~/*": ["./app/*"],
+      "@/types/*": ["./types/*"]
     },
     "esModuleInterop": true,
     "resolveJsonModule": true

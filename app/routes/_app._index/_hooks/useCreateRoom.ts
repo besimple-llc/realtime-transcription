@@ -1,7 +1,7 @@
-import {useCallback, useEffect, useRef} from "react";
-import {useNavigate} from "react-router";
-import {type Socket, io } from "socket.io-client";
-import type {ClientToServerEvents, ServerToClientEvents} from "../../../../types/Websocket";
+import type { ClientToServerEvents, ServerToClientEvents } from "@/types/Websocket";
+import { useCallback, useEffect, useRef } from "react";
+import { useNavigate } from "react-router";
+import { type Socket, io } from "socket.io-client";
 
 export const useCreateRoom = (baseUrl: string) => {
   const socketRef = useRef<Socket<ServerToClientEvents, ClientToServerEvents>>(io(baseUrl));
@@ -23,12 +23,9 @@ export const useCreateRoom = (baseUrl: string) => {
     };
   }, [createdRoomEventHandler]);
 
-  const createJapaneseRoom = useCallback(() => {
-    socketRef.current.emit("create_room", "ja");
-  }, []);
-  const createEnglishRoom = useCallback(() => {
-    socketRef.current.emit("create_room", "en");
+  const createRoom = useCallback(() => {
+    socketRef.current.emit("create_room");
   }, []);
 
-  return { createJapaneseRoom, createEnglishRoom };
+  return { createRoom };
 };

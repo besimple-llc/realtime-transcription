@@ -7,11 +7,11 @@ export interface ServerToClientEvents {
 }
 
 export interface ClientToServerEvents {
-  create_room: (language: Language) => void;
+  create_room: () => void;
   join: (roomId: string) => void;
   leave: (roomId: string) => void;
-  add_text_message: (roomId: string, text: string) => void;
-  add_audio_message: (roomId: string, arrayBuffer: ArrayBuffer) => void;
+  add_text_message: (roomId: string, text: string, language: Language) => void;
+  add_audio_message: (roomId: string, arrayBuffer: ArrayBuffer, language: Language) => void;
 }
 
 export type WebsocketServer = Server<ClientToServerEvents, ServerToClientEvents>;
