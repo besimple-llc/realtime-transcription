@@ -5,12 +5,17 @@ import * as deepl from "deepl-node";
 import type { SourceLanguageCode } from "deepl-node/dist/types";
 
 export class DeepLTranslator implements ITranslator {
-  async translate(text: string, from: Language, to: Language): Promise<string> {
+  private deepL: deepl.Translator;
+
+  constructor() {
     if (!process.env.DEEPL_API_KEY) {
       throw new Error("Please set DEEPL_API_KEY.");
     }
-    const deepL = new deepl.Translator(process.env.DEEPL_API_KEY);
-    const translationResult = await deepL.translateText(
+    this.deepL = new deepl.Translator(process.env.DEEPL_API_KEY);
+  }
+
+  async translate(text: string, from: Language, to: Language): Promise<string> {
+    const translationResult = await this.deepL.translateText(
       text,
       this.changeSourceLanguageCode(from),
       this.changeTargetLanguageCode(to),
